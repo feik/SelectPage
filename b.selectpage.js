@@ -1,5 +1,5 @@
 /**
- * 基于ComboSelect功能进行功能封装，使得初始化更加简易
+ * 基于SelectPage功能进行功能封装，使得初始化更加简易
  * 
  * @author Terry
  * created : 2016.03.26
@@ -20,7 +20,6 @@
 	 */
 	var _defaults = {
 		lang : 'cn',                          //插件语言，默认中文
-		pluginType : 'combobox',              //插件类型，默认[combobox]，可选的有：combobox,simple,textarea
 		showField : 'name',                   //显示在列表中的数据字段，默认设置name字段，它必须在数据源里存在
 		keyField : 'id',                      //数据代码列，默认设置id字段
 		multiple : false,                    //是否为多选模式，默认为单选模式
@@ -42,7 +41,6 @@
 											  //返回：string
 		
 		pageSize : 10,                        //每页显示记录数，默认一页显示10条记录
-		navNum : 5,                           //显示页数个数，即在分页栏中最多显示的页码个数，默认为5
 		initField : 'data-init',              //初始化数据列，默认设置为data-init属性，该属性设置了初始化插件时默认显示的内容
 		                                      //它必须设置在input标签内，例：<input type="text" data-init="20">
 		
@@ -55,16 +53,15 @@
 		                                      //返回结果：{'name':'aa','sex':1}
 		                                      //例如：params : function(){return {'name':'aa','sex':1};}
 		
-		callback : undefined                  //事件回调，响应项目被选中后的事件处理
-		                                      //参数：key，下拉列表对应keyField的值
-		                                      //      value，下拉列表对应showField对应的值
+		callback : undefined                 //事件回调，响应项目被选中后的事件处理
+		                                      //参数：data：选中行的原始JSON数据
 	};
 	
-	var bComboSelect = function(element,options){
+	var bSelectPage = function(element,options){
 		this.init(element,options);
 	};
 	
-	bComboSelect.prototype = {
+	bSelectPage.prototype = {
 		/**
 		 * 初始化组合下拉列表
 		 * @param e  输入控件原生对象
@@ -72,14 +69,14 @@
 		 */
 		init : function(e,p){
 			if(!e || !p || !p.data) {
-				console.error('ComboSelect参数设置不正确！');
+				console.error('SelectPage参数设置不正确！');
 				return;
 			}
 			var $this = $(e);
 			var initCode = '';
 			if($(e).attr(p.initField)) initCode = $(e).attr(p.initField);
 			else initCode = false;
-			$(e).comboSelect(p.data, {
+			$(e).selectPage(p.data, {
 				lang : p.lang,
 				plugin_type : p.pluginType,
 				//button_img : $webroot + 'js/jquery/jquery.ajax-combobox/btn.png',已修改成bootstrap风格的向下键，不再需要设置该参数
@@ -89,21 +86,15 @@
 				search_field : p.searchField,
 				init_record : initCode,
 				per_page : p.pageSize,
-				navi_num : p.navNum,
 				params : p.params,
-				bind_to : 'bComboSelect',
+				bind_to : 'bSelectPage',
 				focus_drop_list : p.focusDropList ? true : false,
 				auto_select_first : p.autoSelectFirst ? true : false,
 				auto_fill_result : p.autoFillResult ? true : false,
 				no_result_clean : p.noResultClean ? true : false,
 				format_item : p.formatItem
-			}).on('bComboSelect',function(){//项目被选中时的回调函数
-				if(p && p.callback && $.isFunction(p.callback)){
-					var mainBox = $(this).closest('div.cs_container');
-					var text = $('input.cs_input',$(mainBox));
-					var value = $('input.cs_hidden',$(mainBox));
-					p.callback($(value).val(),$(text).val());
-				}
+			}).on('bSelectPage',function(e,data){//项目被选中时的回调函数
+				if(p && p.callback && $.isFunction(p.callback)) p.callback(data);
 			});
 		}
 	};
@@ -111,19 +102,19 @@
 	/**
 	 * 插件定义
 	 */
-	$.fn.bComboSelect = function(options){
+	$.fn.bSelectPage = function(options){
 		return this.each(function () {
 			var $this = $(this),
 				params = $.extend({}, _defaults, $.isPlainObject(options) && options);
 
-			var comboSelect = new bComboSelect(this, params);
-			$this.data('bComboSelect',comboSelect);
+			var selectPage = new bSelectPage(this, params);
+			$this.data('bSelectPage',selectPage);
 		});
 	};
 	/**
 	 * 获得文本内容
 	 */
-	$.fn.bComboSelectText = function(){
+	$.fn.bSelectPageText = function(){
 		var id = $(this).attr('id');
 		if(!id) id = $(this).attr('name');
 		return $('#' + id + '_text').val();
